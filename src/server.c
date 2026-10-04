@@ -300,6 +300,7 @@ void handle_client(int client_fd, int thread_id)
 int main(int argc, char *argv[])
 {
     int port = (argc > 1) ? atoi(argv[1]) : DEFAULT_PORT;
+    int pool_size = (argc > 2) ? atoi(argv[2]) : 64;
 
     /* ── Setup logger ───────────────────────────────────────── */
     logger_init(LOG_FILE);
@@ -330,7 +331,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (listen(server_fd, 10) < 0) {
+    if (listen(server_fd, 1024) < 0) {
         perror("listen");
         return 1;
     }
@@ -338,7 +339,7 @@ int main(int argc, char *argv[])
     printf("╔══════════════════════════════════════╗\n");
     printf("║  Concurrent Web Server               ║\n");
     printf("║  Port     : %-5d                    ║\n", port);
-    printf("║  Threads  : %-5d                    ║\n", POOL_SIZE);
+    printf("║  Threads  : %-5d                    ║\n", pool_size);
     printf("║  WWW Root : %-25s║\n", WWW_ROOT);
     printf("╚══════════════════════════════════════╝\n");
     printf("  Press Ctrl+C to stop\n");
@@ -348,7 +349,7 @@ int main(int argc, char *argv[])
     queue_init(&queue);
 
     /* ── Start worker threads ───────────────────────────────── */
-    thread_pool_init(&queue);
+    thread_pool_init(&queue, pool_size);
 
     /* ── Accept loop (main thread) ──────────────────────────── */
     while (running) {

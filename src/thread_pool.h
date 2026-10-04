@@ -3,8 +3,7 @@
 
 #include <pthread.h>
 
-#define POOL_SIZE   4      /* number of worker threads */
-#define QUEUE_SIZE  10     /* max pending client connections */
+#define QUEUE_SIZE  1024   /* max pending client connections */
 
 /* ── Connection Queue ────────────────────────────────────────────────── */
 typedef struct {
@@ -24,7 +23,7 @@ void queue_push(ConnQueue *q, int client_fd);   /* called by main thread  */
 int  queue_pop (ConnQueue *q);                  /* called by workers       */
 void queue_destroy(ConnQueue *q);
 
-void thread_pool_init(ConnQueue *q);
+void thread_pool_init(ConnQueue *q, int pool_size);
 void thread_pool_shutdown(void);
 
 #endif /* THREAD_POOL_H */

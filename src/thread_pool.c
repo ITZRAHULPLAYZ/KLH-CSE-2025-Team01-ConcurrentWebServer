@@ -25,7 +25,8 @@
 extern void handle_client(int client_fd, int thread_id);
 
 /* ── Internal state ──────────────────────────────────────────────────── */
-static pthread_t   workers[POOL_SIZE];     /* thread handles            */
+static pthread_t  *workers = NULL;         /* thread handles            */
+static int         actual_pool_size = 0;   /* dynamic pool size         */
 static ConnQueue  *shared_queue = NULL;    /* pointer to shared queue   */
 static int         shutdown_flag = 0;      /* set to 1 to stop workers  */
 
@@ -130,12 +131,19 @@ static void *worker_func(void *arg)
  * POOL INIT / SHUTDOWN
  * ═══════════════════════════════════════════════════════════════════════ */
 
-void thread_pool_init(ConnQueue *q)
+void thread_pool_init(ConnQueue *q, int pool_size)
 {
     shared_queue = q;
     shutdown_flag = 0;
+    actual_pool_size = pool_size;
 
-    for (int i = 0; i < POOL_SIZE; i++) {
+    workers = (pthread_t *)malloc(sizeof(pthread_t) * pool_size);
+    if (!workers) {
+        perror("malloc workers");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < pool_size; i++) {
         if (pthread_create(&workers[i], NULL, worker_func, (void *)(long)i) != 0) {
             perror("pthread_create");
             exit(EXIT_FAILURE);
@@ -157,8 +165,10 @@ void thread_pool_shutdown(void)
     pthread_mutex_unlock(&shared_queue->lock);
 
     /* wait for each worker to finish */
-    for (int i = 0; i < POOL_SIZE; i++) {
+    for (int i = 0; i < actual_pool_size; i++) {
         pthread_join(workers[i], NULL);
         printf("[Thread-%d] joined\n", i);
     }
+    
+    free(workers);
 }
