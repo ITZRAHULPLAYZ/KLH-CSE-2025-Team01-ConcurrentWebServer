@@ -7,31 +7,31 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: #000; color: #fff; min-height: 100vh; }
-    nav { border-bottom: 1px solid #222; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 56px; }
-    .brand { font-weight: 700; font-size: 0.95rem; color: #fff; text-decoration: none; }
+    body { font-family: 'Inter', sans-serif; background: #fafaf9; color: #000; min-height: 100vh; }
+    nav { border-bottom: 1px solid #000; background: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 56px; }
+    .brand { font-weight: 700; font-size: 0.95rem; color: #000; text-decoration: none; }
     .nav-links { display: flex; gap: 4px; }
-    .nav-links a { color: #666; text-decoration: none; font-size: 0.875rem; font-weight: 500; padding: 6px 12px; border-radius: 6px; transition: color 0.15s, background 0.15s; }
-    .nav-links a:hover { color: #fff; background: #111; }
-    .nav-links a.active { color: #fff; }
-    .nav-cta { font-size: 0.8rem; font-weight: 600; color: #000; background: #fff; padding: 6px 14px; border-radius: 6px; text-decoration: none; }
-    .nav-cta:hover { background: #e5e5e5; }
+    .nav-links a { color: #555; text-decoration: none; font-size: 0.875rem; font-weight: 500; padding: 6px 12px; border-radius: 6px; transition: color 0.15s, background 0.15s; }
+    .nav-links a:hover { color: #000; background: #f0f0f0; }
+    .nav-links a.active { color: #000; font-weight: 600; }
+    .nav-cta { font-size: 0.8rem; font-weight: 600; color: #fff; background: #000; border: 1px solid #000; padding: 6px 14px; border-radius: 6px; text-decoration: none; display: inline-block; transition: background 0.15s, color 0.15s; }
+    .nav-cta:hover { background: #fff; color: #000; border: 1px solid #000; }
 
     main { max-width: 900px; margin: 0 auto; padding: 64px 32px 80px; }
-    .page-label { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #444; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; }
-    h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.04em; margin-bottom: 48px; }
+    .page-label { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #000; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; }
+    h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.04em; margin-bottom: 48px; color: #000; }
 
-    .courses { display: flex; flex-direction: column; gap: 1px; background: #111; border: 1px solid #111; border-radius: 8px; overflow: hidden; }
-    .course { background: #000; padding: 28px; transition: background 0.15s; }
-    .course:hover { background: #080808; }
+    .courses { display: flex; flex-direction: column; gap: 1px; background: #000; border: 1px solid #000; border-radius: 8px; overflow: hidden; }
+    .course { background: #fff; padding: 28px; transition: background 0.15s; }
+    .course:hover { background: #f7f7f7; }
     .course-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-    .course-name { font-size: 1rem; font-weight: 600; }
-    .course-code { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #444; }
-    .course-sem { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; padding: 2px 8px; border: 1px solid #222; border-radius: 3px; color: #555; }
-    .course-topics { font-size: 0.83rem; color: #555; line-height: 1.6; margin-top: 8px; }
-    .topics-label { font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #333; margin-bottom: 4px; }
+    .course-name { font-size: 1rem; font-weight: 600; color: #000; }
+    .course-code { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #555; }
+    .course-sem { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; padding: 3px 8px; border: 1px solid #000; border-radius: 4px; color: #000; background: #f4f4f4; font-weight: 600; }
+    .course-topics { font-size: 0.83rem; color: #444; line-height: 1.6; margin-top: 8px; }
+    .topics-label { font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #000; margin-bottom: 4px; }
 
-    footer { border-top: 1px solid #111; padding: 24px 32px; display: flex; justify-content: space-between; font-size: 0.78rem; color: #444; }
+    footer { border-top: 1px solid #000; background: #fff; padding: 24px 32px; display: flex; justify-content: space-between; font-size: 0.78rem; color: #333; }
   </style>
 </head>
 <body>

@@ -8,11 +8,12 @@
  *   - Elastic POSIX thread pool (thread_pool.c)
  *     · starts with MIN_THREADS, scales to MAX_THREADS on demand
  *     · idle excess threads retire after IDLE_TIMEOUT seconds
- *   - Mutex + condition variables for shared queue (producer-consumer)
+ *     · dynamic live auto-resize (/api/set_pool)
+ *   - Mutex + POSIX counting semaphores (sem_t) for shared queue (producer-consumer)
  *   - mmap() for efficient zero-copy file serving
- *   - POSIX signals: SIGINT (shutdown), SIGHUP (reload), SIGUSR1 (stats)
+ *   - POSIX signals: SIGINT (shutdown), SIGHUP (config reload from server.conf), SIGUSR1 (stats)
  *   - /proc filesystem for live resource monitoring
- *   - /api/stats JSON endpoint for live dashboard
+ *   - /api/stats JSON endpoint for live telemetry dashboard
  *
  * Build:  make
  * Run:    ./server [port] [min_threads] [max_threads]
@@ -40,17 +41,44 @@
 #define DEFAULT_PORT   8080
 #define WWW_ROOT       "data/www"
 #define LOG_FILE       "server.log"
+#define CONFIG_FILE    "server.conf"
 #define BUF_SIZE       4096
 
 /* ── Globals ──────────────────────────────────────────────────────── */
 static volatile int running = 1;
 static ConnQueue    queue;
+static int          cfg_port        = DEFAULT_PORT;
+static int          cfg_pool_size   = DEFAULT_POOL_SIZE;
+static char         cfg_www_root[256] = WWW_ROOT;
+static char         cfg_log_file[256] = LOG_FILE;
 
 /* Request counter — updated with GCC atomic to avoid a separate mutex */
 static volatile long total_requests = 0;
 
 /* Server start time for uptime calculation */
 static time_t server_start_time;
+
+/* ══════════════════════════════════════════════════════════════════════
+ * CONFIGURATION LOADER — reloaded at runtime on SIGHUP
+ * ══════════════════════════════════════════════════════════════════════ */
+static void load_config(const char *filepath)
+{
+    FILE *fp = fopen(filepath, "r");
+    if (!fp) return;
+
+    char line[256];
+    while (fgets(line, sizeof(line), fp)) {
+        if (line[0] == '#' || line[0] == '\n' || line[0] == '\r') continue;
+        char key[64] = {0}, val[192] = {0};
+        if (sscanf(line, "%63[^=]=%191s", key, val) == 2) {
+            if (strcmp(key, "port") == 0) cfg_port = atoi(val);
+            else if (strcmp(key, "pool_size") == 0 || strcmp(key, "min_threads") == 0) cfg_pool_size = atoi(val);
+            else if (strcmp(key, "www_root") == 0) strncpy(cfg_www_root, val, sizeof(cfg_www_root) - 1);
+            else if (strcmp(key, "log_file") == 0) strncpy(cfg_log_file, val, sizeof(cfg_log_file) - 1);
+        }
+    }
+    fclose(fp);
+}
 
 /* ══════════════════════════════════════════════════════════════════════
  * /proc RESOURCE MONITOR — prints on SIGUSR1
@@ -60,6 +88,7 @@ static void print_stats(void)
     PoolStats ps = thread_pool_stats();
 
     printf("\n─── Server Stats ───────────────────────\n");
+    printf("  Pool size         : %d threads\n", ps.pool_size);
     printf("  Active threads    : %d\n", ps.active);
     printf("  Busy threads      : %d\n", ps.busy);
     printf("  Idle threads      : %d\n", ps.idle);
@@ -98,8 +127,18 @@ static void handle_sigint(int sig)
 static void handle_sighup(int sig)
 {
     (void)sig;
-    printf("[Signal] SIGHUP — config reload (no-op)\n");
-    logger_info("SIGHUP received");
+    int old_pool = cfg_pool_size;
+    load_config(CONFIG_FILE);
+    printf("\n[Signal] SIGHUP — reloaded config from %s (pool_size: %d -> %d)\n",
+           CONFIG_FILE, old_pool, cfg_pool_size);
+    char msg[128];
+    snprintf(msg, sizeof(msg), "SIGHUP: config reloaded from %s (pool_size=%d)",
+             CONFIG_FILE, cfg_pool_size);
+    logger_info(msg);
+
+    if (cfg_pool_size != old_pool) {
+        thread_pool_set_size(cfg_pool_size);
+    }
 }
 
 static void handle_sigusr1(int sig) { (void)sig; print_stats(); }
@@ -171,14 +210,27 @@ static void send_403(int fd)
 /* ══════════════════════════════════════════════════════════════════════
  * /api/stats — JSON endpoint for the live dashboard
  * ══════════════════════════════════════════════════════════════════════ */
-static void send_stats_json(int fd)
+static void send_stats_json(int fd, int caller_tid)
 {
     PoolStats ps = thread_pool_stats();
     long uptime  = (long)(time(NULL) - server_start_time);
     long reqs    = total_requests;
 
-    char body[512];
-    int blen = snprintf(body, sizeof(body),
+    ThreadInfo tinfo[MAX_POOL_SIZE];
+    int nthreads = thread_pool_get_threads(tinfo, MAX_POOL_SIZE);
+
+    int busy_count = 0;
+    for (int i = 0; i < nthreads; i++) {
+        if (tinfo[i].tid != caller_tid && tinfo[i].busy) {
+            busy_count++;
+        }
+    }
+
+    size_t cap = 65536;
+    char *body = malloc(cap);
+    if (!body) return;
+
+    int offset = snprintf(body, cap,
         "{"
         "\"pool_size\":%d,"
         "\"busy_threads\":%d,"
@@ -186,14 +238,25 @@ static void send_stats_json(int fd)
         "\"queue_depth\":%d,"
         "\"total_requests\":%ld,"
         "\"uptime_seconds\":%ld,"
-        "\"max_threads\":%d,"
-        "\"min_threads\":%d"
-        "}",
-        ps.active, ps.busy, ps.idle,
-        ps.queue_depth, reqs, uptime,
-        MAX_THREADS, MIN_THREADS);
+        "\"threads\":[",
+        ps.pool_size, busy_count, ps.active - busy_count,
+        ps.queue_depth, reqs, uptime);
 
-    send_response(fd, 200, "application/json", body, blen);
+    for (int i = 0; i < nthreads; i++) {
+        int is_busy = (tinfo[i].tid == caller_tid) ? 0 : tinfo[i].busy;
+        offset += snprintf(body + offset, cap - offset,
+            "%s{\"id\":%d,\"busy\":%d,\"reqs\":%ld}",
+            (i > 0) ? "," : "",
+            tinfo[i].tid,
+            is_busy,
+            tinfo[i].requests_count);
+        if ((size_t)offset >= cap - 128) break;
+    }
+
+    offset += snprintf(body + offset, cap - offset, "]}");
+
+    send_response(fd, 200, "application/json", body, offset);
+    free(body);
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -233,6 +296,7 @@ static void serve_file(int client_fd, const char *filepath,
  * handle_client — called by each worker thread
  *
  * Parses the HTTP request, routes /api/stats to the JSON handler,
+ * /api/set_pool for dynamic resize, /api/work for simulated backend work,
  * otherwise serves a file from WWW_ROOT using mmap().
  * ══════════════════════════════════════════════════════════════════════ */
 void handle_client(int client_fd, int thread_id)
@@ -258,8 +322,48 @@ void handle_client(int client_fd, int thread_id)
 
     /* ── Route: /api/stats ── */
     if (strcmp(path, "/api/stats") == 0) {
-        send_stats_json(client_fd);
+        send_stats_json(client_fd, thread_id);
         logger_log(thread_id, method, "/api/stats", 200);
+        return;
+    }
+
+    /* ── Route: /api/set_pool?size=N (live auto-resize without restart) ── */
+    if (strncmp(path, "/api/set_pool", 13) == 0) {
+        int new_size = 4;
+        char *q = strstr(path, "size=");
+        if (q) new_size = atoi(q + 5);
+        if (new_size < 1) new_size = 1;
+        if (new_size > 1024) new_size = 1024;
+
+        int current = thread_pool_set_size(new_size);
+
+        char body[256];
+        int blen = snprintf(body, sizeof(body),
+            "{\"status\":\"ok\",\"pool_size\":%d,\"min_threads\":%d}",
+            current, new_size);
+        send_response(client_fd, 200, "application/json", body, blen);
+        logger_log(thread_id, method, path, 200);
+        return;
+    }
+
+    /* ── Route: /api/work?ms=N (simulates academic portal workload) ── */
+    if (strncmp(path, "/api/work", 9) == 0) {
+        int ms = 25;
+        char *q = strstr(path, "ms=");
+        if (q) ms = atoi(q + 3);
+        if (ms < 0) ms = 0;
+        if (ms > 2000) ms = 2000;
+
+        if (ms > 0) {
+            usleep(ms * 1000);
+        }
+
+        __sync_fetch_and_add(&total_requests, 1);
+        char body[128];
+        int blen = snprintf(body, sizeof(body),
+            "{\"status\":\"ok\",\"simulated_ms\":%d}", ms);
+        send_response(client_fd, 200, "application/json", body, blen);
+        logger_log(thread_id, method, path, 200);
         return;
     }
 
@@ -272,7 +376,7 @@ void handle_client(int client_fd, int thread_id)
 
     /* Build filesystem path and serve */
     char filepath[512];
-    snprintf(filepath, sizeof(filepath), "%s%s", WWW_ROOT, path);
+    snprintf(filepath, sizeof(filepath), "%s%s", cfg_www_root, path);
     serve_file(client_fd, filepath, method, thread_id);
 }
 
@@ -281,13 +385,14 @@ void handle_client(int client_fd, int thread_id)
  * ══════════════════════════════════════════════════════════════════════ */
 int main(int argc, char *argv[])
 {
-    int port        = (argc > 1) ? atoi(argv[1]) : DEFAULT_PORT;
-    int min_threads = (argc > 2) ? atoi(argv[2]) : MIN_THREADS;
-    int max_threads = (argc > 3) ? atoi(argv[3]) : MAX_THREADS;
+    load_config(CONFIG_FILE);
+
+    int port      = (argc > 1) ? atoi(argv[1]) : cfg_port;
+    int pool_size = (argc > 2) ? atoi(argv[2]) : cfg_pool_size;
 
     server_start_time = time(NULL);
 
-    logger_init(LOG_FILE);
+    logger_init(cfg_log_file);
     logger_info("Server starting");
     register_signals();
 
@@ -309,17 +414,18 @@ int main(int argc, char *argv[])
     printf("┌────────────────────────────────────────┐\n");
     printf("│  KLH Concurrent Web Server             │\n");
     printf("│  Port        : %-5d                   │\n", port);
-    printf("│  Min threads : %-5d  (scales up)       │\n", min_threads);
-    printf("│  Max threads : %-5d                   │\n", max_threads);
-    printf("│  Idle timeout: %-4ds  (excess threads)  │\n", IDLE_TIMEOUT);
-    printf("│  WWW Root    : %-24s│\n", WWW_ROOT);
+    printf("│  Worker Pool : %-5d persistent threads│\n", pool_size);
+    printf("│  Queue Cap   : %-5d pending slots     │\n", QUEUE_SIZE);
+    printf("│  WWW Root    : %-24s│\n", cfg_www_root);
+    printf("│  Config File : %-24s│\n", CONFIG_FILE);
     printf("│  Stats API   : /api/stats              │\n");
     printf("└────────────────────────────────────────┘\n");
-    printf("  Ctrl+C to stop  │  SIGUSR1 (kill -USR1 %d) for stats\n\n", getpid());
+    printf("  Ctrl+C to stop  │  SIGHUP (kill -HUP %d) to reload config\n", getpid());
+    printf("                  │  SIGUSR1 (kill -USR1 %d) for stats\n\n", getpid());
 
-    /* ── Init queue and dynamic pool ── */
+    /* ── Init queue and worker thread pool ── */
     queue_init(&queue);
-    thread_pool_init(&queue, min_threads, max_threads);
+    thread_pool_init(&queue, pool_size);
 
     /* ── Accept loop (main thread) ── */
     while (running) {
