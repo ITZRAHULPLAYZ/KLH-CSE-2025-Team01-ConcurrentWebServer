@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Live server dashboard — KLH Concurrent Web Server.">
+  <title>Dashboard — KLH Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #000; color: #fff; min-height: 100vh; }
+
+    nav {
+      border-bottom: 1px solid #222;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; height: 56px;
+    }
+    .brand { font-weight: 700; font-size: 0.95rem; letter-spacing: -0.02em; color: #fff; text-decoration: none; }
+    .live { display: inline-flex; align-items: center; gap: 8px; }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; animation: blink 1.4s infinite; }
+    @keyframes blink { 0%,100%{opacity:1;}50%{opacity:0.2;} }
+    .nav-links { display: flex; gap: 4px; }
+    .nav-links a { color: #666; text-decoration: none; font-size: 0.875rem; font-weight: 500; padding: 6px 12px; border-radius: 6px; transition: color 0.15s, background 0.15s; }
+    .nav-links a:hover { color: #fff; background: #111; }
+    .nav-links a.active { color: #fff; }
+    .poll-label { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #444; }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 48px 32px 80px; }
+
+    .page-title { margin-bottom: 40px; }
+    .page-title h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 4px; }
+    .page-title p { font-size: 0.85rem; color: #555; }
+
+    /* Stats grid */
+    .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: #111; border: 1px solid #111; border-radius: 8px; overflow: hidden; margin-bottom: 24px; }
+    .stat { background: #000; padding: 24px 20px; }
+    .stat-val { font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 500; display: block; margin-bottom: 4px; }
+    .stat-key { font-size: 0.72rem; color: #444; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    /* Dual layout */
+    .dual { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #111; border: 1px solid #111; border-radius: 8px; overflow: hidden; margin-bottom: 24px; }
+    .panel { background: #000; padding: 0; }
+    .panel-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid #111; }
+    .panel-head h3 { font-size: 0.85rem; font-weight: 600; }
+    .panel-head span { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #444; }
+    .panel-body { padding: 24px; }
+
+    /* Thread grid */
+    #threadGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }
+    .t-card { border: 1px solid #1a1a1a; border-radius: 6px; padding: 12px 8px; text-align: center; transition: border-color 0.2s; }
+    .t-card.idle { border-color: #1a1a1a; }
+    .t-card.busy { border-color: #4ade80; background: #0a0a0a; }
+    .t-id { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: #444; margin-bottom: 6px; }
+    .t-status { font-size: 0.62rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+    .t-status.idle { color: #333; }
+    .t-status.busy { color: #4ade80; }
+
+    /* Queue bar */
+    .q-row { display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #444; margin-bottom: 8px; }
+    .q-track { height: 4px; background: #111; border-radius: 4px; overflow: hidden; margin-bottom: 20px; }
+    .q-fill { height: 100%; background: #fff; border-radius: 4px; transition: width 0.5s; }
+    .q-fill.warn { background: #facc15; }
+    .q-fill.crit { background: #f87171; }
+
+    /* Slider */
+    .ctrl-label { font-size: 0.78rem; color: #666; margin-bottom: 10px; }
+    .ctrl-label span { color: #fff; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+    .slider-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    input[type=range] { flex: 1; -webkit-appearance: none; height: 3px; background: #222; outline: none; border-radius: 3px; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #fff; cursor: pointer; }
+    .mini { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: #444; }
+    .apply-btn { display: inline-block; padding: 8px 16px; background: #fff; color: #000; font-size: 0.8rem; font-weight: 600; border: none; border-radius: 6px; cursor: pointer; transition: background 0.15s; }
+    .apply-btn:hover { background: #e5e5e5; }
+    .apply-note { margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: #444; }
+
+    /* Log */
+    .log-panel { border: 1px solid #111; border-radius: 8px; overflow: hidden; margin-bottom: 24px; }
+    .log-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #111; background: #000; }
+    .log-head h3 { font-size: 0.85rem; font-weight: 600; }
+    .clr-btn { background: none; border: 1px solid #222; color: #555; font-size: 0.72rem; padding: 3px 10px; border-radius: 4px; cursor: pointer; transition: color 0.15s, border-color 0.15s; }
+    .clr-btn:hover { color: #fff; border-color: #555; }
+    #log { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 1.8; padding: 16px 20px; max-height: 200px; overflow-y: auto; background: #000; color: #555; }
+    #log .ok   { color: #4ade80; }
+    #log .warn { color: #facc15; }
+    #log .ts   { color: #333; }
+
+    footer { border-top: 1px solid #111; padding: 20px 32px; display: flex; justify-content: space-between; font-size: 0.78rem; color: #444; }
+
+    @media (max-width: 700px) {
+      .stats { grid-template-columns: repeat(3, 1fr); }
+      .dual { grid-template-columns: 1fr; }
+      nav { padding: 0 16px; }
+      main { padding: 32px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/index.html" class="brand">
+    <span class="live"><span class="live-dot"></span>KLH / Dashboard</span>
+  </a>
+  <div class="nav-links">
+    <a href="/index.html">Home</a>
+    <a href="/notices.html">Notices</a>
+    <a href="/schedule.html">Schedule</a>
+    <a href="/courses.html">Courses</a>
+    <a href="/dashboard.html" class="active">Dashboard</a>
+  </div>
+  <span class="poll-label">polling 2s</span>
+</nav>
+
+<main>
+  <div class="page-title">
+    <h1>Server Dashboard</h1>
+    <p>Real-time view of the concurrent web server thread pool and connection queue.</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><span class="stat-val" id="v-pool">–</span><span class="stat-key">Pool size</span></div>
+    <div class="stat"><span class="stat-val" id="v-busy">–</span><span class="stat-key">Busy threads</span></div>
+    <div class="stat"><span class="stat-val" id="v-queue">–</span><span class="stat-key">Queue depth</span></div>
+    <div class="stat"><span class="stat-val" id="v-reqs">–</span><span class="stat-key">Requests</span></div>
+    <div class="stat"><span class="stat-val" id="v-up">–</span><span class="stat-key">Uptime s</span></div>
+  </div>
+
+  <div class="dual">
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Thread Pool</h3>
+        <span id="t-count">0 threads</span>
+      </div>
+      <div class="panel-body">
+        <div id="threadGrid"></div>
+      </div>
+    </div>
+    <div class="panel" style="border-left: 1px solid #111;">
+      <div class="panel-head"><h3>Controls</h3></div>
+      <div class="panel-body">
+        <div class="ctrl-label">Pool size — <span id="sv">16</span> threads</div>
+        <div class="slider-row">
+          <span class="mini">1</span>
+          <input type="range" id="sl" min="1" max="128" value="16" oninput="document.getElementById('sv').textContent=this.value">
+          <span class="mini">128</span>
+        </div>
+        <button class="apply-btn" onclick="applySize()">Apply</button>
+        <div class="apply-note" id="an">restart: ./server [port] [threads]</div>
+
+        <div style="margin-top:28px;">
+          <div class="ctrl-label">Queue utilisation</div>
+          <div class="q-row"><span id="ql">0 / 1024</span><span id="qp">0%</span></div>
+          <div class="q-track"><div class="q-fill" id="qf" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="log-panel">
+    <div class="log-head">
+      <h3>Event Log</h3>
+      <button class="clr-btn" onclick="clr()">Clear</button>
+    </div>
+    <div id="log"></div>
+  </div>
+</main>
+
+<footer>
+  <span>KLH-CSE-2025 · Team 01</span>
+  <span>Concurrent Web Server · OSSP PBL</span>
+</footer>
+
+<script>
+  let entries = [], last = null, simR = 0, simU = 0;
+  const Q = 1024;
+
+  function ts() { return new Date().toLocaleTimeString('en-GB',{hour12:false}); }
+  function log(msg, cls='') {
+    entries.push(`<span class="ts">[${ts()}]</span> <span class="${cls}">${msg}</span>`);
+    if (entries.length > 80) entries.shift();
+    const el = document.getElementById('log');
+    el.innerHTML = entries.join('<br>');
+    el.scrollTop = el.scrollHeight;
+  }
+  function clr() { entries = []; document.getElementById('log').innerHTML = ''; }
+
+  function renderThreads(n, busy) {
+    const g = document.getElementById('threadGrid');
+    g.innerHTML = '';
+    for (let i = 0; i < n; i++) {
+      const b = i < busy;
+      g.innerHTML += `<div class="t-card ${b?'busy':'idle'}">
+        <div class="t-id">T-${i}</div>
+        <div class="t-status ${b?'busy':'idle'}">${b?'busy':'idle'}</div>
+      </div>`;
+    }
+    document.getElementById('t-count').textContent = `${n} threads`;
+  }
+
+  function renderQueue(d) {
+    const pct = Math.min(100, Math.round(d / Q * 100));
+    const f = document.getElementById('qf');
+    f.style.width = pct + '%';
+    f.className = 'q-fill' + (pct >= 80 ? ' crit' : pct >= 40 ? ' warn' : '');
+    document.getElementById('ql').textContent = `${d} / ${Q}`;
+    document.getElementById('qp').textContent = pct + '%';
+  }
+
+  async function poll() {
+    try {
+      const d = await fetch('/api/stats').then(r => { if(!r.ok) throw 0; return r.json(); });
+      document.getElementById('v-pool' ).textContent = d.pool_size      ?? '–';
+      document.getElementById('v-busy' ).textContent = d.busy_threads   ?? '–';
+      document.getElementById('v-queue').textContent = d.queue_depth    ?? '–';
+      document.getElementById('v-reqs' ).textContent = d.total_requests ?? '–';
+      document.getElementById('v-up'   ).textContent = d.uptime_seconds ?? '–';
+      renderThreads(d.pool_size || 0, d.busy_threads || 0);
+      renderQueue(d.queue_depth || 0);
+      if (!last) log(`connected — pool: ${d.pool_size} threads`, 'ok');
+      else if ((d.total_requests||0) > (last.total_requests||0))
+        log(`+${(d.total_requests||0)-(last.total_requests||0)} request(s) — total: ${d.total_requests}`, 'ok');
+      last = d;
+    } catch(_) {
+      // simulated fallback
+      const n = parseInt(document.getElementById('sl').value) || 16;
+      const b = Math.floor(Math.random() * Math.min(n, 3));
+      simR += Math.floor(Math.random() * 2); simU++;
+      document.getElementById('v-pool' ).textContent = n;
+      document.getElementById('v-busy' ).textContent = b;
+      document.getElementById('v-queue').textContent = 0;
+      document.getElementById('v-reqs' ).textContent = simR;
+      document.getElementById('v-up'   ).textContent = simU;
+      renderThreads(n, b); renderQueue(0);
+      if (!last) log('/api/stats not available — running simulation', 'warn');
+      last = {};
+    }
+  }
+
+  function applySize() {
+    const v = document.getElementById('sl').value;
+    document.getElementById('an').textContent = `apply: ./server 8080 ${v}`;
+    log(`pool size → ${v} threads (restart required)`, 'warn');
+  }
+
+  poll();
+  setInterval(poll, 2000);
+  log('dashboard ready', '');
+</script>
+</body>
+</html>

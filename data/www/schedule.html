@@ -2,39 +2,93 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Exam Schedule — KLH Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; background: #f4f4f4; }
-    h1 { color: #003366; }
-    nav a { margin-right: 15px; color: #003366; text-decoration: none; font-weight: bold; }
-    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
-    th { background: #003366; color: white; padding: 10px; }
-    td { padding: 10px; border-bottom: 1px solid #ddd; text-align: center; }
-    tr:hover td { background: #eef; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #000; color: #fff; min-height: 100vh; }
+    nav { border-bottom: 1px solid #222; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 56px; }
+    .brand { font-weight: 700; font-size: 0.95rem; color: #fff; text-decoration: none; }
+    .nav-links { display: flex; gap: 4px; }
+    .nav-links a { color: #666; text-decoration: none; font-size: 0.875rem; font-weight: 500; padding: 6px 12px; border-radius: 6px; transition: color 0.15s, background 0.15s; }
+    .nav-links a:hover { color: #fff; background: #111; }
+    .nav-links a.active { color: #fff; }
+    .nav-cta { font-size: 0.8rem; font-weight: 600; color: #000; background: #fff; padding: 6px 14px; border-radius: 6px; text-decoration: none; }
+    .nav-cta:hover { background: #e5e5e5; }
+
+    main { max-width: 900px; margin: 0 auto; padding: 64px 32px 80px; }
+    .page-label { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #444; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; }
+    h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.04em; margin-bottom: 12px; }
+    .subtitle { font-size: 0.88rem; color: #555; margin-bottom: 48px; }
+
+    /* Table */
+    .table-wrap { border: 1px solid #111; border-radius: 8px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background: #0a0a0a; border-bottom: 1px solid #1a1a1a; }
+    th {
+      padding: 14px 20px;
+      text-align: left;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #444;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    tbody tr { border-bottom: 1px solid #0d0d0d; transition: background 0.12s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #080808; }
+    td { padding: 16px 20px; font-size: 0.875rem; color: #ccc; }
+    td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #555; }
+    td.subject { color: #fff; font-weight: 500; }
+    td.code { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #555; }
+
+    footer { border-top: 1px solid #111; padding: 24px 32px; display: flex; justify-content: space-between; font-size: 0.78rem; color: #444; }
   </style>
 </head>
 <body>
-  <h1>📅 Examination Schedule — 2025</h1>
-  <nav>
+<nav>
+  <a href="/index.html" class="brand">KLH / Portal</a>
+  <div class="nav-links">
     <a href="/index.html">Home</a>
     <a href="/notices.html">Notices</a>
-    <a href="/schedule.html">Schedule</a>
+    <a href="/schedule.html" class="active">Schedule</a>
     <a href="/courses.html">Courses</a>
-  </nav>
-  <hr>
-  <table>
-    <tr>
-      <th>Date</th>
-      <th>Subject</th>
-      <th>Code</th>
-      <th>Time</th>
-      <th>Venue</th>
-    </tr>
-    <tr><td>Oct 10</td><td>Operating Systems</td><td>CS301</td><td>9:00 AM</td><td>Block A</td></tr>
-    <tr><td>Oct 12</td><td>Computer Networks</td><td>CS302</td><td>9:00 AM</td><td>Block B</td></tr>
-    <tr><td>Oct 14</td><td>DBMS</td><td>CS303</td><td>9:00 AM</td><td>Block A</td></tr>
-    <tr><td>Oct 16</td><td>Software Engineering</td><td>CS304</td><td>9:00 AM</td><td>Block C</td></tr>
-    <tr><td>Oct 18</td><td>Theory of Computation</td><td>CS305</td><td>9:00 AM</td><td>Block B</td></tr>
-  </table>
+  </div>
+  <a href="/dashboard.html" class="nav-cta">Dashboard</a>
+</nav>
+
+<main>
+  <div class="page-label">Examinations</div>
+  <h1>Exam Schedule</h1>
+  <p class="subtitle">Mid-semester examination timetable — CSE Sem 5 · 2025</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Subject</th>
+          <th>Code</th>
+          <th>Time</th>
+          <th>Venue</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Oct 10, 2025</td><td class="subject">Operating Systems</td><td class="code">CS301</td><td>9:00 AM</td><td>Block A</td></tr>
+        <tr><td>Oct 12, 2025</td><td class="subject">Computer Networks</td><td class="code">CS302</td><td>9:00 AM</td><td>Block B</td></tr>
+        <tr><td>Oct 14, 2025</td><td class="subject">Database Management Systems</td><td class="code">CS303</td><td>9:00 AM</td><td>Block A</td></tr>
+        <tr><td>Oct 16, 2025</td><td class="subject">Software Engineering</td><td class="code">CS304</td><td>9:00 AM</td><td>Block C</td></tr>
+        <tr><td>Oct 18, 2025</td><td class="subject">Theory of Computation</td><td class="code">CS305</td><td>9:00 AM</td><td>Block B</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<footer>
+  <span>KLH-CSE-2025 · Team 01</span>
+  <span>Concurrent Web Server · OSSP PBL</span>
+</footer>
 </body>
 </html>

@@ -1,0 +1,4 @@
+[2026-10-30 14:31:13] [INFO] Server starting
+[2026-10-30 14:31:24] [Thread-2] GET /api/stats 200
+[2026-10-30 14:32:24] [Thread-0] GET /api/stats 200
+[2026-10-30 14:32:41] [Thread-1] GET /api/stats 200

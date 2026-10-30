@@ -2,38 +2,109 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Notices — KLH Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; background: #f4f4f4; }
-    h1 { color: #003366; }
-    nav a { margin-right: 15px; color: #003366; text-decoration: none; font-weight: bold; }
-    .notice { background: white; padding: 15px; margin: 10px 0; border-left: 4px solid #003366; border-radius: 4px; }
-    .date { color: #888; font-size: 0.85em; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #000; color: #fff; min-height: 100vh; }
+    nav { border-bottom: 1px solid #222; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 56px; }
+    .brand { font-weight: 700; font-size: 0.95rem; color: #fff; text-decoration: none; }
+    .nav-links { display: flex; gap: 4px; }
+    .nav-links a { color: #666; text-decoration: none; font-size: 0.875rem; font-weight: 500; padding: 6px 12px; border-radius: 6px; transition: color 0.15s, background 0.15s; }
+    .nav-links a:hover { color: #fff; background: #111; }
+    .nav-links a.active { color: #fff; }
+    .nav-cta { font-size: 0.8rem; font-weight: 600; color: #000; background: #fff; padding: 6px 14px; border-radius: 6px; text-decoration: none; }
+    .nav-cta:hover { background: #e5e5e5; }
+
+    main { max-width: 760px; margin: 0 auto; padding: 64px 32px 80px; }
+    .page-label { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #444; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; }
+    h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.04em; margin-bottom: 48px; }
+
+    .notices { display: flex; flex-direction: column; gap: 1px; background: #111; border: 1px solid #111; border-radius: 8px; overflow: hidden; }
+    .notice { background: #000; padding: 24px 28px; display: flex; gap: 20px; align-items: flex-start; transition: background 0.15s; }
+    .notice:hover { background: #080808; }
+    .notice-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: #444;
+      white-space: nowrap;
+      padding-top: 2px;
+      min-width: 80px;
+    }
+    .notice-body h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; }
+    .notice-body p { font-size: 0.85rem; color: #666; line-height: 1.6; }
+    .badge {
+      display: inline-block;
+      margin-top: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-weight: 500;
+    }
+    .badge-red   { background: #1a0000; color: #f87171; border: 1px solid #3a0000; }
+    .badge-amber { background: #1a1200; color: #fbbf24; border: 1px solid #3a2a00; }
+    .badge-green { background: #001a08; color: #4ade80; border: 1px solid #003015; }
+
+    footer { border-top: 1px solid #111; padding: 24px 32px; display: flex; justify-content: space-between; font-size: 0.78rem; color: #444; }
   </style>
 </head>
 <body>
-  <h1>📢 Notices</h1>
-  <nav>
+<nav>
+  <a href="/index.html" class="brand">KLH / Portal</a>
+  <div class="nav-links">
     <a href="/index.html">Home</a>
-    <a href="/notices.html">Notices</a>
+    <a href="/notices.html" class="active">Notices</a>
     <a href="/schedule.html">Schedule</a>
     <a href="/courses.html">Courses</a>
-  </nav>
-  <hr>
-  <div class="notice">
-    <strong>Mid-Semester Exams</strong>
-    <span class="date"> — Oct 10, 2025</span>
-    <p>Mid-semester examinations for all CSE sections begin from October 10th. Hall tickets available on the portal.</p>
   </div>
-  <div class="notice">
-    <strong>OS Project Submission Deadline</strong>
-    <span class="date"> — Oct 5, 2025</span>
-    <p>All teams must submit source code and report before 5 PM on Oct 5th via GitHub.</p>
+  <a href="/dashboard.html" class="nav-cta">Dashboard</a>
+</nav>
+
+<main>
+  <div class="page-label">Announcements</div>
+  <h1>Notices</h1>
+
+  <div class="notices">
+    <div class="notice">
+      <div class="notice-date">Oct 10, 2025</div>
+      <div class="notice-body">
+        <h3>Mid-Semester Examinations</h3>
+        <p>Mid-semester examinations for all CSE sections begin from October 10th. Hall tickets are available on the student portal.</p>
+        <span class="badge badge-red">Urgent</span>
+      </div>
+    </div>
+    <div class="notice">
+      <div class="notice-date">Oct 5, 2025</div>
+      <div class="notice-body">
+        <h3>OS Project Submission Deadline</h3>
+        <p>All teams must submit source code and report before 5 PM on Oct 5th via the GitHub classroom link shared by the guide.</p>
+        <span class="badge badge-amber">Deadline</span>
+      </div>
+    </div>
+    <div class="notice">
+      <div class="notice-date">Sep 30, 2025</div>
+      <div class="notice-body">
+        <h3>Campus Placement Drive — TCS & Infosys</h3>
+        <p>TCS and Infosys placement drive scheduled for eligible students. Register on the careers portal before Sep 28th.</p>
+        <span class="badge badge-green">Placement</span>
+      </div>
+    </div>
+    <div class="notice">
+      <div class="notice-date">Sep 15, 2025</div>
+      <div class="notice-body">
+        <h3>PBL Batch Allocation</h3>
+        <p>Project-Based Learning batch and guide allocations for the OSSP concurrent web server project are now finalized.</p>
+        <span class="badge badge-green">Info</span>
+      </div>
+    </div>
   </div>
-  <div class="notice">
-    <strong>Campus Placement Drive</strong>
-    <span class="date"> — Sep 30, 2025</span>
-    <p>TCS and Infosys placement drive scheduled. Register on the careers portal by Sep 28th.</p>
-  </div>
+</main>
+
+<footer>
+  <span>KLH-CSE-2025 · Team 01</span>
+  <span>Concurrent Web Server · OSSP PBL</span>
+</footer>
 </body>
 </html>

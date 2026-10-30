@@ -2,35 +2,317 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="KLH University Resource Portal — notices, schedule, courses.">
   <title>KLH University Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; background: #f4f4f4; }
-    h1 { color: #003366; }
-    nav a { margin-right: 15px; color: #003366; text-decoration: none; font-weight: bold; }
-    nav a:hover { text-decoration: underline; }
-    .card { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #000;
+      color: #fff;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── Nav ── */
+    nav {
+      border-bottom: 1px solid #222;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 56px;
+    }
+    .brand {
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: -0.02em;
+      color: #fff;
+      text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 4px; }
+    .nav-links a {
+      color: #666;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .nav-links a:hover { color: #fff; background: #111; }
+    .nav-links a.active { color: #fff; }
+    .nav-cta {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #000;
+      background: #fff;
+      padding: 6px 14px;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .nav-cta:hover { background: #e5e5e5; }
+
+    /* ── Layout ── */
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 80px 32px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      border-bottom: 1px solid #111;
+      padding-bottom: 64px;
+      margin-bottom: 64px;
+    }
+    .tag {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: #555;
+      border: 1px solid #222;
+      padding: 3px 10px;
+      border-radius: 4px;
+      margin-bottom: 28px;
+      letter-spacing: 0.05em;
+    }
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+    .hero p {
+      font-size: 1rem;
+      color: #777;
+      max-width: 520px;
+      margin-bottom: 36px;
+    }
+    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-white { background: #fff; color: #000; }
+    .btn-white:hover { background: #e5e5e5; }
+    .btn-outline { background: transparent; color: #fff; border: 1px solid #333; }
+    .btn-outline:hover { background: #111; border-color: #444; }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: #111;
+      border: 1px solid #111;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 64px;
+    }
+    .stat {
+      background: #000;
+      padding: 24px;
+    }
+    .stat-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.8rem;
+      font-weight: 500;
+      color: #fff;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .stat-key {
+      font-size: 0.75rem;
+      color: #444;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Section ── */
+    .section-label {
+      font-size: 0.72rem;
+      color: #444;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 20px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1px; background: #111; border: 1px solid #111; border-radius: 8px; overflow: hidden; margin-bottom: 64px; }
+    .card {
+      background: #000;
+      padding: 28px;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: background 0.15s;
+    }
+    .card:hover { background: #0a0a0a; }
+    .card-label {
+      font-size: 0.72rem;
+      color: #444;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 12px;
+    }
+    .card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; letter-spacing: -0.02em; }
+    .card p { font-size: 0.85rem; color: #666; line-height: 1.6; }
+    .card-arrow { display: inline-block; margin-top: 20px; font-size: 0.8rem; color: #444; }
+    .card:hover .card-arrow { color: #fff; }
+
+    /* ── Features ── */
+    .features { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1px; background: #111; border: 1px solid #111; border-radius: 8px; overflow: hidden; }
+    .feat {
+      background: #000;
+      padding: 24px;
+    }
+    .feat-code { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #555; margin-bottom: 10px; }
+    .feat h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
+    .feat p { font-size: 0.8rem; color: #555; line-height: 1.5; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid #111;
+      padding: 24px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      color: #444;
+    }
+
+    @media (max-width: 640px) {
+      nav { padding: 0 16px; }
+      main { padding: 48px 16px; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      footer { flex-direction: column; gap: 8px; text-align: center; }
+    }
   </style>
 </head>
 <body>
-  <h1>🎓 KLH University Resource Portal</h1>
-  <nav>
-    <a href="/index.html">Home</a>
+
+<nav>
+  <a href="/index.html" class="brand">KLH / Portal</a>
+  <div class="nav-links">
+    <a href="/index.html" class="active">Home</a>
     <a href="/notices.html">Notices</a>
     <a href="/schedule.html">Schedule</a>
     <a href="/courses.html">Courses</a>
-  </nav>
-  <hr>
-  <div class="card">
-    <h2>Welcome, Students!</h2>
-    <p>This portal is powered by a <strong>Concurrent Web Server</strong> built in C using POSIX threads, mmap, and signals — our OS project!</p>
   </div>
-  <div class="card">
-    <h2>Quick Links</h2>
-    <ul>
-      <li><a href="/notices.html">📢 Latest Notices</a></li>
-      <li><a href="/schedule.html">📅 Exam Schedule</a></li>
-      <li><a href="/courses.html">📚 Course Materials</a></li>
-    </ul>
+  <a href="/dashboard.html" class="nav-cta">Dashboard</a>
+</nav>
+
+<main>
+  <section class="hero">
+    <div class="tag">CONCURRENT WEB SERVER — OSSP PBL 2026</div>
+    <h1>KLH University<br>Resource Portal</h1>
+    <p>Built on a C web server using POSIX threads, mmap(), and OS signals. Notices, schedules, and course materials — served concurrently.</p>
+    <div class="hero-actions">
+      <a href="/dashboard.html" class="btn btn-white">Live Dashboard</a>
+      <a href="/courses.html" class="btn btn-outline">Browse Courses</a>
+    </div>
+  </section>
+
+  <div class="stats-row">
+    <div class="stat">
+      <span class="stat-val" id="s-threads">–</span>
+      <span class="stat-key">Threads</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val" id="s-queue">–</span>
+      <span class="stat-key">Queue depth</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val" id="s-reqs">–</span>
+      <span class="stat-key">Requests</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val" id="s-uptime">–</span>
+      <span class="stat-key">Uptime (s)</span>
+    </div>
   </div>
+
+  <div class="section-label">Quick access</div>
+  <div class="grid">
+    <a href="/notices.html" class="card">
+      <div class="card-label">Announcements</div>
+      <h3>Notices</h3>
+      <p>Latest circulars, exam alerts, and university announcements.</p>
+      <span class="card-arrow">View →</span>
+    </a>
+    <a href="/schedule.html" class="card">
+      <div class="card-label">Examinations</div>
+      <h3>Schedule</h3>
+      <p>Mid-term and end-semester timetable for all CSE courses.</p>
+      <span class="card-arrow">View →</span>
+    </a>
+    <a href="/courses.html" class="card">
+      <div class="card-label">Academics</div>
+      <h3>Courses</h3>
+      <p>Syllabus and materials for all offered Sem 5 subjects.</p>
+      <span class="card-arrow">View →</span>
+    </a>
+    <a href="/dashboard.html" class="card">
+      <div class="card-label">Server monitor</div>
+      <h3>Dashboard</h3>
+      <p>Live thread pool state, queue depth, and request stats.</p>
+      <span class="card-arrow">View →</span>
+    </a>
+  </div>
+
+  <div class="section-label">OS concepts in this server</div>
+  <div class="features">
+    <div class="feat">
+      <div class="feat-code">pthread_create()</div>
+      <h4>Thread Pool</h4>
+      <p>N worker threads spin up once. No per-request thread overhead.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-code">pthread_mutex_t</div>
+      <h4>Mutex + Condvars</h4>
+      <p>Circular bounded queue shared safely between producer and consumers.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-code">mmap()</div>
+      <h4>Memory-Mapped I/O</h4>
+      <p>Files sent zero-copy directly from the OS page cache.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-code">signal()</div>
+      <h4>POSIX Signals</h4>
+      <p>SIGINT = graceful shutdown. SIGUSR1 = live /proc stats dump.</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span>KLH-CSE-2025 · Team 01</span>
+  <span>Concurrent Web Server · OSSP PBL</span>
+</footer>
+
+<script>
+  async function poll() {
+    try {
+      const d = await fetch('/api/stats').then(r => r.json());
+      document.getElementById('s-threads').textContent = d.pool_size      ?? '–';
+      document.getElementById('s-queue'  ).textContent = d.queue_depth    ?? '–';
+      document.getElementById('s-reqs'   ).textContent = d.total_requests ?? '–';
+      document.getElementById('s-uptime' ).textContent = d.uptime_seconds ?? '–';
+    } catch (_) {}
+  }
+  poll();
+  setInterval(poll, 3000);
+</script>
 </body>
 </html>
